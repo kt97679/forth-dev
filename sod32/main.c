@@ -5,6 +5,7 @@
 */
 
 #include <stdio.h>
+#include <stdlib.h>
 #include "sod32.h"
 
 UNS8 mem[MEMSIZE+3];

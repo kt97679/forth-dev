@@ -5,6 +5,8 @@
 */
 
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include "sod32.h"
 
 
@@ -35,6 +37,7 @@ void do_os(void)
  int res;
  static FILE *fileids[20];
  FILE *fp;
+ char *unused;
  UNS32 code=CELL(save_sp);save_sp+=4;
  switch(code) {
   case 0: /*exit*/ systerm();exit(0);break;
@@ -69,7 +72,7 @@ void do_os(void)
   case 10: /*read-line*/ FILEID(CELL(save_sp)) len=CELL(save_sp+4)+2;
                          addr=CELL(save_sp+8);CLIP SWAP 
                          clearerr(fp);
-                         fgets(mem+addr,len,fp);
+                         unused = fgets(mem+addr,len,fp);
                          if(ferror(fp)){ior=-200;SWAP goto end;}
                          res=strlen(mem+addr);
                          if(!res || feof(fp))CELL(save_sp+4)=0; 
