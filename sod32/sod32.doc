@@ -1,0 +1,250 @@
+SOD32 and its Forth.
+
+This file describes some technical details about the (imaginary) SOD 32 CPU
+and its software simulator written in C. The SOD 32 CPU (or rather its 
+instruction set) was designed to facilitate the implementation of
+the Forth programming language and to make an efficient software simulator
+possible.
+
+1 THE SOD 32 CPU
+
+The SOD 32 CPU has the following features:
+- 32 bit architecture.
+- 2-stack machine.
+- single-cell call and jump instructions.
+- 6 simultaneous subinstructions per cell (plus optional return).
+
+The CPU has four registers.
+- IP the instruction pointer contains the address of the instruction
+  that will be executed next. It is incremented after the instruction
+  has been fetched.
+- IR the instruction register contains the instruction that is executed.
+  It is presently not user-visible, but if interrupts/traps/exceptions
+  are implemented, it will be pushed on the stack so that the remaining
+  subinstructions of an instruction can be resumed after the return from
+  the interrupt. (the already executed subinstructions will be zeroed
+  out in this case so they don't get executed again after return).
+- SP the stack pointer points to the top element of the data stack.
+  This stack resides in memory and grows downward.
+- RP the returns stack pointer points to the top element of the return
+  stack. This stack resides in memory and grows downward. The subroutine
+  return addresses are pushed on it and it is accessed with >r r> and r@.
+
+Note that the CPU has no accumulator register and no status register. All
+arithmetic instructions use the stack and the conditional jump also pops
+its condition from the stack. There is an add with carry instruction
+(+cy) but this also uses a carry bit on the stack.
+
+Memory is accessed by 8 bit bytes (c@ and c!a) and by 32 bit cells (@ and !a). 
+Cell means '32 bit machine word' in the context of this file. Cell accesses
+are always at an address that is a multiple of four (aligned address). A
+cell contains four bytes. The bytes in a cell are accessed in big-endian
+order (most significant byte at lowest address).
+ 
+The items on the stacks are always cells. Even if one byte is fetched with
+c@, it is still pushed as a whole cell (zero extended) on the stack.
+
+1.2 INSTRUCTION FORMATS
+
+SOD-32 has three different types of instructions, the call, the conditional
+jump and a word that packs six different instructions plus an optional
+return instruction.
+
+If bit 0 and 1 are both 0, then the instruction is a call. Bit 31-2 of the
+destination address is in bits 31-2 and as it is an aligned address, bits 0
+and 1 of that address are always 0. THe CALL instruction pushes the
+instruction pointer on the return stack.
+
+If bit 0 is 0 and bit 1 is 1, then the instruction is a conditional jump.
+Bit 31-2 of the aligned destination address are in bit 31-2 of the
+instruction word. The instruction pops one cell from the stack and 
+jumps if that cell is zero. 
+
+If bit 0 is 1, then the instruction contains 6 subinstructions i0..i5
+All these are executed in turn. If bit 31 is 1, then a return is executed
+after this. Most of the subinstructions are standard Forth words.
+The lit instruction gets the cell at the address of the instruction
+pointer and pushes it onto the stack. The instruction pointer is 
+incremented beyond that cell. The file kernel.4 or the derived
+glossary forth.glo has more detailed information on the subinstructions.
+
+What follows is an overview of the SOD-32 instruction formats.
+
+31-2    1 0  CALL instruction.
+address 0 0    
+
+31-2    1 0  JUMPZ instruction.
+address 1 0 
+
+31 30-26 25-21 20-16 15-11 10-6 5-1 0
+r  i5    i4    i3    i2    i1   i0  1
+
+r bit indicates return after this instruction.
+
+Subinstructions: 
+00 000      ---       nop   
+00 001      ---       swap
+00 010 a b c---b c a  rot 
+00 011    n --- f     0=
+00 100    n --- -n    negate
+00 101  a b --- l h   um*  
+00 110 addr --- c     c@   
+00 111 addr --- n     @
+
+01 000  a b --- a+b   +
+01 001  a b --- a&b   and 
+01 010  a b --- a|b   or
+01 011  a b --- a^b   xor
+01 100  a b --- f     u<
+01 101  a b --- f     <
+01 110  a b --- a<<b  lshift 
+01 111  a b --- a>>b  rshift
+
+10 000 l h a--- r q   um/mod       
+10 001 a b c---sum cy +cy  
+10 010 a dir--- n     scan1
+10 011 code ---       special
+10 100    n ---       drop
+10 101    n ---       >r  
+10 110 a c  --- a     c!a 
+10 111 a n  --- a     !a
+
+11 000    n --- n n   dup
+11 001  a b --- a b a over  
+11 010      --- n     r@
+11 011      --- n     r>
+11 100      --- 0     push0
+11 101      --- 1     push1
+11 110      --- 4     push4
+11 111      --- lit   lit
+
+1.3 SPECIAL INSTRUCTIONS 
+
+The instruction 'special' is provided to  facilitate the addition of an
+unlimited number of instructions to the SOD 32 instruction set, which would
+otherwise be limited to 32 different instructions plus call/jump/return.
+The instruction pops a code from the stack and then executes the special
+instruction with that code. The current implementation provides only
+four instructions to access the stack pointers and  one instruction to call
+the OS. In future versions of SOD 32, special instructions for interrupts,
+memory management, floating point etc. can be added.
+
+code
+ 0       --- sp   sp@
+ 1    sp ---      sp!
+ 2       --- rp   rp@
+ 3    rp ---      rp!
+32 osfun ---      oscall           
+
+32 special corresponds to what would be a 'trap' or 'int' instruction
+on conventional CPU's (software interrupt). In the software simulator an
+OS function is called by this instruction. For more details on the OS 
+functions see the files special.c and kernel.4
+
+2 THE SOFTWARE SIMULATOR FOR SOD 32.
+
+The software emulator for SOD 32 is written in ANSI C. It should be very
+portable across machines that have 8 bit bytes and a 32 bit integer type.
+It uses no operating system specific code and therefore characters are
+read from the terminal through getchar in the 'cooked' mode, which is a
+bit different from what it should be in ANS Forth.
+
+There is even an (incomplete) SOD 32 software simulator in Forth that you can
+run on any 32 bit implementation of ANS Forth. This also runs under SOD 32
+Forth, but then you still need the C simulator to run SOD 32 Forth to run
+the Forth SOD 32 simulator.
+
+Some implementation details of the SOD 32 simulator are given below.
+The memory of SOD 32 is in the byte array 'mem'. The mem array has a size
+that is a power of 2 (1 MByte by default) and all addresses are 'and'-ed
+with a mask to confine them within the array. The SOD 32 addresses are used
+as an index in the mem array.
+
+The cells are kept in the native endian order of the CPU that runs the 
+simulator. Cell accesses are far more frequent than byte accesses. If you
+run the simulator on a little endian machine, the mem array is laid out
+byte-swapped with respect to the observed lay out of the SOD 32 memory.
+If you access a byte on a little endian machine, the address is 'xor'-ed
+by 3, which gives you the right byte address in the byte-swapped array.
+Further, when a file operation is performed on a region of memory, the
+whole region is byte-swapped both before and after the file operation.
+
+Great care has been taken to make it impossible for the simulator to access
+memory outside the mem array. Operations on memory regions clip the region
+to within the mem array, In fact a SOD 32 program running wild should never
+generate a core dump. Further special characters such as /, \ and : are
+excluded from file names, so that the simulator cannot access files outside
+the current directory. Of course you can remove that safety feature. The
+word SYSTEM is provided, so nasty SOD 32 programs can still mess up files
+outside the current directory, but not as easily.
+
+The core instruction set is implemented in the file engine.c and the special
+instructions are implemented in the file special.c You can rewrite engine.c
+in optimized assembler (it has been done for the 386 and it works under
+Linux and gives a factor 2 speed improvement) while special.c remains in C.
+
+3 THE FORTH ON SOD 32.
+
+The Forth system on SOD 32 is a native code compiling Forth, this is native
+machine code for the SOD 32 processor, which must of course itself be 
+interpreted.
+
+For each word list in the dictionary there is one linked list that is searched
+linearly. The fields for each dictionary entry are as follows:
+   - Link field: 1 cell address of name field of previous definition.
+   - Name field: Length byte plus up to 31 characters.
+                 Bits 5-7 of length byte are:
+                         5 Indicates that definition is a macro.
+                         6 Indicates that definition is immediate.
+                         7 always 1,indicates start of name.
+   - Code field: 1 cell for CREATE VARIABLE or CONSTANT, one or more for
+                 colon definition. Contains executable code.
+   - Parameter field: data of CREATE VARIABLE or CONSTANT. 
+
+Space in the dictionary is allocated linearly from the address contained
+in DP. This address is returned by the word HERE. 
+
+SOD 32 is closely modeled after dp-ANS 6, the draft proposed ANSI standard
+for Forth. It is _not_ a conforming implementation. It contains most of the
+CORE word set and some of the FILES, SEARCH-ORDER and STRING wordsets, just
+enough to run its own cross compiler and glossary generator.
+
+The cross compiler (cross.4), glossary generator (glosgen.4) and software 
+emulator (sod32.4) are all believed to be ANSI programs that use the FILES,
+STRINGS and SEARCH-ORDER wordsets. They have the environmental dependency
+that they require a 32-bit Forth to run with a two's complement number
+representation. These programs do all run under PFE, a Forth interpreter
+written in C by Dirk Zoller (duz@roxi.rz.fht-mannheim.de). 
+They also happen to run under SOD 32 Forth.
+
+The cross compiler (cross.4) is run under SOD 32 Forth or an ANSI Forth. It
+includes kernel.4 to be cross-compiled. It produces the image of a SOD 32
+program (kernel.img). This is the image of a minimal Forth system.  This
+minimal FOrth system is then run (sod32 kernel.img) and the extensions are
+loaded with 
+
+ S" extend.4" INCLUDED 
+
+This will produce an image file of a complete Forth (forth.img). Forth is
+normally started with
+
+   sod32 forth.img
+
+The file cross.4 gives many technical details of the cross compiler in its
+comments. The file kernel.4 would have been about 14k if it were not for the
+elaborate comments and now it is 42k. Read it! extend.4 is also well
+commented. 
+
+The file glosgen.4 contains the glossary generator. It turns the word
+definitions, stack comments and \G comments into a glossary file. The
+standard way to produce a glossary is
+
+sod32 forth.img
+
+S" glosgen.4" INCLUDED
+NEWGLOS
+MAKEGLOS file1.4
+MAKEGLOS file2.4
+WRITEGLOS xxx.glo
+BYE
+
