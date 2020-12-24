@@ -257,7 +257,7 @@ M: 2* ( w1 --- w2)
 
 : DEPTH ( --- n )
 \G n is the number of cells on the stack (before DEPTH was executed).
-  SP@ S0 @ SWAP - 2/ ;
+  SP@ S0 @ SWAP - 2 RSHIFT ;
 
 
 \ The DO LOOP related words use the return stack. The top of the
