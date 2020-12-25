@@ -2,3 +2,8 @@ original sod 32
 
 kernel.img 10164
 tester.fr real    0m0.059s user    0m0.054s sys     0m0.004s
+
+lshift, rshift
+
+kernel.img 10312
+tester.fri real    0m0.071s user    0m0.070s sys     0m0.001s

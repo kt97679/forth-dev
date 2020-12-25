@@ -80,14 +80,6 @@ OPCODE U<      ( u1 u2 ---- f)
 OPCODE <      ( n1 n2 --- f)
 \G f is true if and only if signed number n1 is less than n2.
 
-14
-OPCODE LSHIFT ( x1 u --- x2)
-\G Shift x1 left by u bits, zeros are added to the right.
-
-15
-OPCODE RSHIFT ( x1 u --- x2)
-\G Shift x1 right by u bits, zeros are added to the left.
-
 16
 OPCODE UM/MOD ( ud u1 --- urem uquot)
 \G Divide the unsigned double number ud by u1, giving unsigned quotient
@@ -247,9 +239,27 @@ M: RP!      ( a-addr ---)
 \G Set the return stack pointer to a-addr.
   03 SPECIAL ;
 
+M: 2DUP  ( d --- d d)
+\G Duplicate the top double number on the stack.
+   OVER OVER ;
+
+: ?DUP ( n --- 0 | n n)
+\G Duplicate the top cell on the stack, but only if it is nonzero.
+   DUP IF DUP THEN ;
+
+M: D+ ( d1 d2 --- d3)
+\G Add the double numbers d1 and d2.
+   >R ROT 0 +CY ROT + R> + ;
+
+: NIP SWAP DROP ;
+
+: LSHIFT ?DUP IF 0 DO DUP + LOOP THEN ;
+
+: RSHIFT ?DUP IF NEGATE 0 SWAP 32 + 0 DO 2DUP D+ LOOP NIP THEN ;
+
 M: 2* ( w1 --- w2)
 \G Multiply w1 by 2.
-  1 LSHIFT ;
+  DUP + ;
 
 : 2/  ( n1 --- n2)
 \G Divide signed number n1 by 2.
@@ -356,7 +366,7 @@ CONSTANT TRUE ( --- -1)
 CONSTANT BL ( --- 32 )
 \G Constant 32, the blank character
 
-M: PICK  ( u --- x)
+: PICK  ( u --- x)
 \G place a copy of stack cell number u on the stack. 0 PICK is DUP, 1 PICK
 \G is OVER etc.
   1 + 1 1 + LSHIFT SP@ + @ ;
@@ -410,9 +420,9 @@ M: CELL+ ( a-addr1 --- a-addr2)
 \G a-addr2 is the address of the next cell after a-addr2.
     4 + ;
 
-M: CELLS ( n2 --- n1)
+: CELLS ( n2 --- n1)
 \G n2 is the number of address units occupied by n1 cells.
-   1 1 + LSHIFT ;
+   2* 2* ;
 
 M: CELL- ( a-addr1 --- a-addr2)
 \G a-addr2 is the address of the previous cell before a-addr1.
@@ -430,25 +440,13 @@ M: 2@ ( a-addr --- d )
 \G Fetch double number d at a-addr.
    DUP 4 + @ SWAP @ ;
 
-M: D+ ( d1 d2 --- d3)
-\G Add the double numbers d1 and d2.
-   >R ROT 0 +CY ROT + R> + ;
-
 M: 2! ( d a-addr --- )
 \G Store the double number d at a-addr.
    !A 4 + !A DROP ;
 
-M: 2DUP  ( d --- d d)
-\G Duplicate the top double number on the stack.
-   OVER OVER ;
-
 M: 2DROP ( d --- )
 \G Discard the top double number on the stack.
    DROP DROP ;
-
-: ?DUP ( n --- 0 | n n)
-\G Duplicate the top cell on the stack, but only if it is nonzero.
-   DUP IF DUP THEN ;
 
 : MIN ( n1 n2 --- n3)
 \G n3 is the minimum of n1 and n2.
