@@ -12,3 +12,8 @@ tester.fr real    0m0.071s user    0m0.070s sys     0m0.001s
 
 kernel.img 11552
 tester.fr real    0m0.123s user    0m0.113s sys     0m0.009s
+
+c@, c!a
+
+kernel.img 11952
+tester.fr real    0m0.795s user    0m0.795s sys     0m0.000s

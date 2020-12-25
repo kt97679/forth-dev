@@ -44,9 +44,9 @@ OPCODE 0=    ( x --- f)
 OPCODE NEGATE  ( n1 --- -n1)
 \G Negate top number on the stack.
 
-6
-OPCODE C@      ( c-addr --- c)
-\G Fetch character c at c-addr.
+5
+OPCODE !     ( x a-addr --- )
+\G Store cell x at a-addr
 
 7
 OPCODE @       ( a-addr --- x)
@@ -72,11 +72,6 @@ OPCODE U<      ( u1 u2 ---- f)
 OPCODE <      ( n1 n2 --- f)
 \G f is true if and only if signed number n1 is less than n2.
 
-17
-OPCODE +CY    ( n1 n2 cy1 --- n3 cy2)
-\G Add n1 and n2 and the carry flag cy1 (must be 0 or 1) giving sum n3
-\G and carry flag cy2. (n3 cy2 can be seen as a double number)
-
 18
 OPCODE UM+    ( n1 n2 --- n3 cy)
 \G Add n1 and n2 giving sum n3 and carry flag cy
@@ -93,10 +88,6 @@ OPCODE DROP   ( x ---)
 21
 OPCODE >R     ( x ---)
 \G Push x on the return stack.
-
-22
-OPCODE C!A    ( c c-addr --- c-addr)
-\G Store character c at c-addr, keep address.
 
 23
 OPCODE !A     ( x a-addr --- a-addr)
@@ -158,6 +149,8 @@ OPCODE LIT    ( --- lit)
 \ avoid large numbers of forward references.
 
 : + UM+ DROP ;
+
+: !A DUP ROT ROT ! ;
 
 : -    ( w1 w2 --- w3 )
 \G Subtract the top two numbers on the stack (w2 from w1).
@@ -239,11 +232,30 @@ M: 2DUP  ( d --- d d)
 \G Add the double numbers d1 and d2.
    >R SWAP >R UM+ R> R> + + ;
 
+M: INVERT ( x1 --- x2)
+\G Invert all the bits of x1 (one's complement)
+   -1 XOR ;
+
 : NIP SWAP DROP ;
 
 : LSHIFT ?DUP IF 0 DO DUP + LOOP THEN ;
 
 : RSHIFT ?DUP IF NEGATE 0 SWAP 32 + 0 DO 2DUP D+ LOOP NIP THEN ;
+
+: ENDIAN-MASK 3 ;
+
+: C@ DUP -4 AND @ SWAP 3 AND ENDIAN-MASK XOR
+  DUP + DUP + DUP + RSHIFT
+  255 AND ;
+
+: C!A DUP ROT ROT
+  DUP -4 AND DUP >R @ >R 3 AND ENDIAN-MASK XOR
+  DUP + DUP + DUP +
+  DUP >R
+  LSHIFT
+  255 R> LSHIFT
+  INVERT R>
+  AND OR R> ! ;
 
 : 2* ( w1 --- w2)
 \G Multiply w1 by 2.
@@ -313,10 +325,6 @@ M: UNLOOP ( --- )
      IF R> DROP DROP 4 + >R
      ELSE >R @ >R THEN ;
 
-M: -1 ( --- -1)
-\G The constant number -1.
-  1 NEGATE ;
-
 : COUNT  ( c-addr1 --- c-addr2 c)
 \G c-addr2 is the next address after c-addr1 and c is the character
 \G stored at c-addr1.
@@ -360,13 +368,9 @@ CONSTANT BL ( --- 32 )
 \G is OVER etc.
   1 + 1 1 + LSHIFT SP@ + @ ;
 
-M: C! ( c c-addr --- )
+: C! ( c c-addr --- )
 \G Store character c at c-addr
    C!A DROP ;
-
-M: ! ( x a-addr --- )
-\G Store cell x at a-addr
-   !A DROP ;
 
 M: OFF ( a-addr ---)
 \G Store FALSE at a-addr.
@@ -383,10 +387,6 @@ M: ON ( a-addr ---)
 : 1- ( w1 --- w2)
 \G Subtract 1 from the top of the stack.
    1 - ;
-
-M: INVERT ( x1 --- x2)
-\G Invert all the bits of x1 (one's complement)
-   -1 XOR ;
 
 
 \ The next few words manipulate addresses in a system-independent way.

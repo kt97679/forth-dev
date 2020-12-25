@@ -19,58 +19,6 @@ void swap_mem(UNS32 start,UNS32 len) {
 #endif
 }
 
-/* Multiply 32-bit unsigned numbers *a and *b.
-   High half of 64-bit result in *a, low half in *b
-*/   
-static void umul(UNS32 *a,UNS32 *b)
-{
- UNS32 ah,al,bh,bl,ph,pm1,pm2,pl;
- ah=*a>>16;al=*a&0xffff;
- bh=*b>>16;bl=*b&0xffff;
- pl=al*bl;
- if((ah|bh)==0) {
-  ph=0;
- } else {
-  pm1=al*bh;
-  pm2=ah*bl;
-  ph=ah*bh;
-  pl=pl+(pm1<<16);
-  ph+=(pl<(pm1<<16));
-  pl=pl+(pm2<<16);
-  ph+=(pl<(pm2<<16));
-  ph=ph+(pm1>>16)+(pm2>>16);
- } 
- *a=ph;*b=pl;
-}
-
-/* Divide 64-bit unsigned number (high half *b, low half *c) by
-   32-bit unsigend number in *a. Quotient in *b, remainder in *c.
-*/
-static void udiv(UNS32 *a,UNS32 *b,UNS32 *c)
-{
- UNS32 d,qh,ql;
- int i,cy;
- qh=*b;ql=*c;d=*a;
- if(qh==0) {
-  *b=ql/d;
-  *c=ql%d;
- } else {
-  for(i=0;i<32;i++) {
-   cy=qh&0x80000000;
-   qh<<=1;
-   if(ql&0x80000000)qh++;
-   ql<<=1;
-   if(qh>=d||cy) {
-    qh-=d;
-    ql++;
-    cy=0;
-   } 
-   *c=qh;
-   *b=ql; 
-  }  
- }
-}
-
 void virtual_machine(void)
 {
  register UNS32 sp,rp,ret,ip,ireg,t;
@@ -111,41 +59,14 @@ void virtual_machine(void)
                       CELL(sp+4)=CELL(sp);CELL(sp)=t;break;
      case 3: /*0=*/   CELL(sp)=-!CELL(sp);break;
      case 4: /*negate*/ CELL(sp)=-CELL(sp);break;
-     case 5: /* um* */ umul(&CELL(sp),&CELL(sp+4));
-                       break;
-     case 6: /* C@ */  CELL(sp)=BYTE(CELL(sp));break;                                                   
+     case 5: /* !    */ sp += 8; CELL(CELL(sp - 8)) = CELL((sp - 4) & CELLMASK); break;
      case 7: /* @ */   CELL(sp)=CELL(CELL(sp)&CELLMASK);break;
-     case 8: /* + */   CELL(sp+4)=CELL(sp)+CELL(sp+4);sp+=4;break;
      case 9: /* and */ CELL(sp+4)=CELL(sp)&CELL(sp+4);sp+=4;break;
      case 10:/* or  */ CELL(sp+4)=CELL(sp)|CELL(sp+4);sp+=4;break;
      case 11:/* xor */ CELL(sp+4)=CELL(sp)^CELL(sp+4);sp+=4;break;
      case 12:/* u<  */ CELL(sp+4)=-(CELL(sp+4)<CELL(sp));sp+=4;break;
      case 13:/* <   */ CELL(sp+4)=-((INT32)CELL(sp+4)<(INT32)CELL(sp));
                        sp+=4;break;
-     case 14:/*lshift*/CELL(sp+4)<<=CELL(sp);sp+=4;break;
-     case 15:/*rshift*/CELL(sp+4)>>=CELL(sp);sp+=4;break;
-     case 16:/*um/mod*/if(CELL(sp)<=CELL(sp+4)) { /*overflow */
-                         interrupt=8;
-                         ireg=((ireg<<1)+1) | ret ;
-                         goto doint;
-                       }
-                       else
-                       {
-                        udiv(&CELL(sp),&CELL(sp+4),&CELL(sp+8));
-			sp+=4;
-                       }break;
-     case 17:/* +cy */ { UNS32 sum; if(CELL(sp)) { /* carry in */
-                          sum=CELL(sp+8)+CELL(sp+4)+1;
-                          sp+=4;
-                          CELL(sp)=(sum<=CELL(sp));
-                          CELL(sp+4)=sum;
-                         } else {
-                          sum=CELL(sp+8)+CELL(sp+4);
-                          sp+=4;
-                          CELL(sp)=(sum<CELL(sp));
-                          CELL(sp+4)=sum;
-                         }
-                       }break;
      case 18:/* um+  */ t = CELL(sp) + CELL(sp + 4); CELL(sp) = (t < CELL(sp)); CELL(sp + 4) = t; break;
      case 19:/*special*/ t=CELL(sp);sp+=4;
                          if(t==49) { /* iret instruction */
@@ -163,9 +84,6 @@ void virtual_machine(void)
                          break;
      case 20:/* drop */ sp+=4;break;
      case 21:/* >r   */ rp-=4;CELL(rp)=CELL(sp);sp+=4;break;
-     case 22:/* c!a  */ t=CELL(sp);BYTE(t)=CELL(sp+4);sp+=4;
-                        CELL(sp)=t;break;
-     case 23:/* !a   */ t=CELL(sp);CELL(t)=CELL((sp+4)&CELLMASK);sp+=4;
                         CELL(sp)=t;break;
      case 24:/* dup  */ sp-=4;CELL(sp)=CELL(sp+4);break;
      case 25:/* over */ sp-=4;CELL(sp)=CELL(sp+8);break;
