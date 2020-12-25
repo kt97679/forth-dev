@@ -36,14 +36,6 @@ OPCODE SWAP  ( x1 x2 --- x2 x1 )
 OPCODE ROT   ( x1 x2 x3 --- x2 x3 x1 )
 \G Rotate the three top items on the stack.
 
-3
-OPCODE 0=    ( x --- f)
-\G f is true if and only if x is 0.
-
-4
-OPCODE NEGATE  ( n1 --- -n1)
-\G Negate top number on the stack.
-
 5
 OPCODE !     ( x a-addr --- )
 \G Store cell x at a-addr
@@ -64,14 +56,6 @@ OPCODE OR      ( x1 x2 --- x3)
 OPCODE XOR     ( x1 x2 --- x3)
 \G Bitwise exclusive or of the top two cells on the stack.
 
-12
-OPCODE U<      ( u1 u2 ---- f)
-\G f is true if and only if unsigned number u1 is less than u2.
-
-13
-OPCODE <      ( n1 n2 --- f)
-\G f is true if and only if signed number n1 is less than n2.
-
 18
 OPCODE UM+    ( n1 n2 --- n3 cy)
 \G Add n1 and n2 giving sum n3 and carry flag cy
@@ -88,10 +72,6 @@ OPCODE DROP   ( x ---)
 21
 OPCODE >R     ( x ---)
 \G Push x on the return stack.
-
-23
-OPCODE !A     ( x a-addr --- a-addr)
-\G Store cell x at a-addr, keep address.
 
 24
 OPCODE DUP    ( x --- x x )
@@ -148,13 +128,41 @@ OPCODE LIT    ( --- lit)
 \ dependent on each other, so they are in a less than logical order to
 \ avoid large numbers of forward references.
 
+: INVERT ( x1 --- x2)
+\G Invert all the bits of x1 (one's complement)
+   -1 XOR ;
+
 : + UM+ DROP ;
 
-: !A DUP ROT ROT ! ;
+: NEGATE INVERT 1 + ;
 
 : -    ( w1 w2 --- w3 )
 \G Subtract the top two numbers on the stack (w2 from w1).
   NEGATE + ;
+
+: NIP SWAP DROP ;
+
+: 0< -2147483648 AND DUP UM+ NIP NEGATE ;
+
+: 0> NEGATE 0< ;
+
+: 0<> DUP 0< SWAP 0> OR ;
+
+: 0= 0<> INVERT ;
+
+M: 2DUP  ( d --- d d)
+\G Duplicate the top double number on the stack.
+   OVER OVER ;
+
+: EXIT ( ---)
+\G Exit the definition that calls EXIT.
+   R> DROP ;
+
+: U< 2DUP XOR 0< IF  NIP 0< EXIT THEN - 0< ;
+
+: <  2DUP XOR 0< IF DROP 0< EXIT THEN - 0< ;
+
+: !A DUP ROT ROT ! ;
 
 : =    ( x1 x2 --- f)
 \G f is true if and only if x1 is equal to x2.
@@ -164,19 +172,11 @@ OPCODE LIT    ( --- lit)
 \G f is true if and only if x1 is not equal to x2.
   = 0= ;
 
-M: 0<   ( n --- f)
-\G f is true if and only if n is less than 0.
-  0 < ;
-
-M: >    ( n1 n2 --- f)
+: >    ( n1 n2 --- f)
 \G f is true if and only if the signed number n1 is less than n2.
   SWAP < ;
 
-M: 0>  ( n --- f)
-\G f is true if and only if n is greater than 0.
-  0 > ;
-
-M: U>  ( u1 u2 --- f)
+: U>  ( u1 u2 --- f)
 \G f is true if and only if the unsigned number u1 is greater than u2.
   SWAP U< ;
 
@@ -220,10 +220,6 @@ M: RP!      ( a-addr ---)
 \G Set the return stack pointer to a-addr.
   03 SPECIAL ;
 
-M: 2DUP  ( d --- d d)
-\G Duplicate the top double number on the stack.
-   OVER OVER ;
-
 : ?DUP ( n --- 0 | n n)
 \G Duplicate the top cell on the stack, but only if it is nonzero.
    DUP IF DUP THEN ;
@@ -231,12 +227,6 @@ M: 2DUP  ( d --- d d)
 : D+ ( d1 d2 --- d3)
 \G Add the double numbers d1 and d2.
    >R SWAP >R UM+ R> R> + + ;
-
-M: INVERT ( x1 --- x2)
-\G Invert all the bits of x1 (one's complement)
-   -1 XOR ;
-
-: NIP SWAP DROP ;
 
 : LSHIFT ?DUP IF 0 DO DUP + LOOP THEN ;
 
@@ -457,10 +447,6 @@ M: 2DROP ( d --- )
 \G ud is the absolute value of d.
    DUP 0< IF DNEGATE THEN ;
 
-: EXIT ( ---)
-\G Exit the definition that calls EXIT.
-   R> DROP ;
-
 : UM* 0 SWAP 32 0 DO DUP UM+ >R >R DUP UM+ R> + R>
      IF >R OVER UM+ R> + THEN LOOP ROT DROP ;
 
@@ -504,7 +490,7 @@ M: 2DROP ( d --- )
 \G Intermediate result is double.
   */MOD SWAP DROP ;
 
-M: S>D  ( n --- d)
+: S>D  ( n --- d)
 \G Convert single number to double number.
    DUP 0< ;
 
