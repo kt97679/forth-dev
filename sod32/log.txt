@@ -6,4 +6,9 @@ tester.fr real    0m0.059s user    0m0.054s sys     0m0.004s
 lshift, rshift
 
 kernel.img 10312
-tester.fri real    0m0.071s user    0m0.070s sys     0m0.001s
+tester.fr real    0m0.071s user    0m0.070s sys     0m0.001s
+
++, um*, um/mod
+
+kernel.img 11552
+tester.fr real    0m0.123s user    0m0.113s sys     0m0.009s

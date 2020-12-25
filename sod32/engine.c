@@ -145,16 +145,8 @@ void virtual_machine(void)
                           CELL(sp)=(sum<CELL(sp));
                           CELL(sp+4)=sum;
                          }
-                       }break; 
-     case 18:/*scan1*/ if(CELL(sp)){ /* scan from right */
-                         t=0;while(!(CELL(sp+4)&1) && t<32) {
-                          CELL(sp+4)>>=1;t++;
-                         }
-                       } else { 
-                         t=0;while(!(CELL(sp+4)&0x80000000) && t<32) {
-                          CELL(sp+4)<<=1;t++;
-                         } 
-                       }sp+=4;CELL(sp)=t;break;
+                       }break;
+     case 18:/* um+  */ t = CELL(sp) + CELL(sp + 4); CELL(sp) = (t < CELL(sp)); CELL(sp + 4) = t; break;
      case 19:/*special*/ t=CELL(sp);sp+=4;
                          if(t==49) { /* iret instruction */
                           ip=CELL(rp);rp+=4;

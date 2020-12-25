@@ -44,10 +44,6 @@ OPCODE 0=    ( x --- f)
 OPCODE NEGATE  ( n1 --- -n1)
 \G Negate top number on the stack.
 
-5
-OPCODE UM*     ( u1 u2 --- ud )
-\G Multiply two unsigned numbers, giving double result.
-
 6
 OPCODE C@      ( c-addr --- c)
 \G Fetch character c at c-addr.
@@ -55,10 +51,6 @@ OPCODE C@      ( c-addr --- c)
 7
 OPCODE @       ( a-addr --- x)
 \G Fetch cell x at a-addr.
-
-8
-OPCODE +       ( w1 w2 --- w3)
-\G Add the top two numbers on the stack.
 
 9
 OPCODE AND     ( x1 x2 --- x3)
@@ -80,21 +72,15 @@ OPCODE U<      ( u1 u2 ---- f)
 OPCODE <      ( n1 n2 --- f)
 \G f is true if and only if signed number n1 is less than n2.
 
-16
-OPCODE UM/MOD ( ud u1 --- urem uquot)
-\G Divide the unsigned double number ud by u1, giving unsigned quotient
-\G and remainder.
-
 17
 OPCODE +CY    ( n1 n2 cy1 --- n3 cy2)
 \G Add n1 and n2 and the carry flag cy1 (must be 0 or 1) giving sum n3
 \G and carry flag cy2. (n3 cy2 can be seen as a double number)
 
 18
-OPCODE SCAN1  ( x d --- u)
-\G Scan x for the first 1 bit. u is the position of that bit (counted
-\G from the scan direction) and 32 if x=0. d is the scan direction,
-\G 0 is left-to-right, 1 is right-to-left.
+OPCODE UM+    ( n1 n2 --- n3 cy)
+\G Add n1 and n2 giving sum n3 and carry flag cy
+\G n3 cy can be seen as a double number
 
 19
 OPCODE SPECIAL ( x ---)
@@ -171,15 +157,17 @@ OPCODE LIT    ( --- lit)
 \ dependent on each other, so they are in a less than logical order to
 \ avoid large numbers of forward references.
 
-M: -    ( w1 w2 --- w3 )
+: + UM+ DROP ;
+
+: -    ( w1 w2 --- w3 )
 \G Subtract the top two numbers on the stack (w2 from w1).
   NEGATE + ;
 
-M: =    ( x1 x2 --- f)
+: =    ( x1 x2 --- f)
 \G f is true if and only if x1 is equal to x2.
   - 0= ;
 
-M: <>   ( x1 x2 --- f)
+: <>   ( x1 x2 --- f)
 \G f is true if and only if x1 is not equal to x2.
   = 0= ;
 
@@ -199,9 +187,9 @@ M: U>  ( u1 u2 --- f)
 \G f is true if and only if the unsigned number u1 is greater than u2.
   SWAP U< ;
 
-M: EMIT ( c ---)
+: EMIT ( c ---)
 \G Output the character c to the terminal.
-  1 1 + 32 SPECIAL ;
+  2 32 SPECIAL ;
 
 M: KEY ( --- c)
 \G Input the character c from the terminal.
@@ -247,9 +235,9 @@ M: 2DUP  ( d --- d d)
 \G Duplicate the top cell on the stack, but only if it is nonzero.
    DUP IF DUP THEN ;
 
-M: D+ ( d1 d2 --- d3)
+: D+ ( d1 d2 --- d3)
 \G Add the double numbers d1 and d2.
-   >R ROT 0 +CY ROT + R> + ;
+   >R SWAP >R UM+ R> R> + + ;
 
 : NIP SWAP DROP ;
 
@@ -257,7 +245,7 @@ M: D+ ( d1 d2 --- d3)
 
 : RSHIFT ?DUP IF NEGATE 0 SWAP 32 + 0 DO 2DUP D+ LOOP NIP THEN ;
 
-M: 2* ( w1 --- w2)
+: 2* ( w1 --- w2)
 \G Multiply w1 by 2.
   DUP + ;
 
@@ -329,7 +317,7 @@ M: -1 ( --- -1)
 \G The constant number -1.
   1 NEGATE ;
 
-M: COUNT  ( c-addr1 --- c-addr2 c)
+: COUNT  ( c-addr1 --- c-addr2 c)
 \G c-addr2 is the next address after c-addr1 and c is the character
 \G stored at c-addr1.
 \G This word is intended to be used with 'counted strings' where the
@@ -340,7 +328,7 @@ M: COUNT  ( c-addr1 --- c-addr2 c)
 \G Output the string starting at c-addr and length u to the terminal.
   DUP IF 0 DO DUP I + C@ EMIT LOOP DROP ELSE DROP DROP THEN ;
 
-M: ALIGNED ( c-addr --- a-addr )
+: ALIGNED ( c-addr --- a-addr )
 \G a-addr is the first aligned address after c-addr.
   4 1 NEGATE + + 4 NEGATE AND ;
 
@@ -348,6 +336,7 @@ M: ALIGNED ( c-addr --- a-addr )
 \G Runtime part of ."
 \ This expects an in-line counted string.
   R> COUNT OVER OVER TYPE + ALIGNED >R ;
+  
 : (S")  ( --- c-addr u )
 \G Runtime part of S"
 \ It returns address and length of an in-line counted string.
@@ -387,11 +376,11 @@ M: ON ( a-addr ---)
 \G Store TRUE at a-addr.
    -1 SWAP ! ;
 
-M: 1+ ( w1 --- w2 )
+: 1+ ( w1 --- w2 )
 \G Add 1 to the top of the stack.
    1 + ;
 
-M: 1- ( w1 --- w2)
+: 1- ( w1 --- w2)
 \G Subtract 1 from the top of the stack.
    1 - ;
 
@@ -404,7 +393,7 @@ M: INVERT ( x1 --- x2)
 \ Use CHAR+ instead of 1+ and it will be portable to systems where you
 \ have to add something different from 1.
 
-M: CHAR+ ( c-addr1 --- c-addr2)
+: CHAR+ ( c-addr1 --- c-addr2)
 \G c-addr2 is the next character address after c-addr1.
    1 + ;
 
@@ -412,11 +401,11 @@ M: CHARS ( n1 --- n2)
 \G n2 is the number of address units occupied by n1 characters.
 ; \ A no-op.
 
-M: CHAR-  ( c-addr1 --- c-addr2)
+: CHAR-  ( c-addr1 --- c-addr2)
 \G c-addr2 is the previous character address before c-addr1.
    1 - ;
 
-M: CELL+ ( a-addr1 --- a-addr2)
+: CELL+ ( a-addr1 --- a-addr2)
 \G a-addr2 is the address of the next cell after a-addr2.
     4 + ;
 
@@ -424,11 +413,11 @@ M: CELL+ ( a-addr1 --- a-addr2)
 \G n2 is the number of address units occupied by n1 cells.
    2* 2* ;
 
-M: CELL- ( a-addr1 --- a-addr2)
+: CELL- ( a-addr1 --- a-addr2)
 \G a-addr2 is the address of the previous cell before a-addr1.
    4 - ;
 
-M: +! ( w a-addr ---)
+: +! ( w a-addr ---)
 \G Add w to the contents of the cell at a-addr.
    DUP @ ROT + SWAP !A DROP ;
 
@@ -436,11 +425,11 @@ M: +! ( w a-addr ---)
 \ The most significant half on the number is in the first memory
 \ cell or in the top cell on the stack (which is also the first address).
 
-M: 2@ ( a-addr --- d )
+: 2@ ( a-addr --- d )
 \G Fetch double number d at a-addr.
    DUP 4 + @ SWAP @ ;
 
-M: 2! ( d a-addr --- )
+: 2! ( d a-addr --- )
 \G Store the double number d at a-addr.
    !A 4 + !A DROP ;
 
@@ -456,7 +445,7 @@ M: 2DROP ( d --- )
 \G n3 is the maximum of n1 and n2.
    OVER OVER < IF SWAP THEN DROP ;
 
-M: DNEGATE ( d1 --- d2)
+: DNEGATE ( d1 --- d2)
 \G Negate the top double number on the stack.
    >R NEGATE R> NEGATE OVER 0= 0=  + ;
 
@@ -467,6 +456,18 @@ M: DNEGATE ( d1 --- d2)
 : DABS ( d --- ud)
 \G ud is the absolute value of d.
    DUP 0< IF DNEGATE THEN ;
+
+: EXIT ( ---)
+\G Exit the definition that calls EXIT.
+   R> DROP ;
+
+: UM* 0 SWAP 32 0 DO DUP UM+ >R >R DUP UM+ R> + R>
+     IF >R OVER UM+ R> + THEN LOOP ROT DROP ;
+
+: UM/MOD DUP 0= IF ABORT" divide by zero" THEN
+     2DUP U< IF NEGATE 32 0 DO >R DUP UM+ >R >R DUP UM+ R> + DUP
+     R> R@ SWAP >R UM+ R> OR IF >R DROP 1 + R> ELSE DROP THEN R>
+     LOOP DROP SWAP EXIT ELSE ABORT" result out of range" THEN ;
 
 : SM/REM ( d n1 --- nrem nquot )
 \G Divide signed double number d by single number n1, giving quotient and
@@ -489,7 +490,7 @@ M: DNEGATE ( d1 --- d2)
 \G Multiply the signed numbers n1 and n2, giving the signed double number d.
   2DUP XOR >R ABS SWAP ABS UM* R> 0< IF DNEGATE THEN ;
 
-M: * ( w1 w2 --- w3)
+: * ( w1 w2 --- w3)
 \G Multiply single numbers, signed or unsigned give the same result.
   UM* DROP ;
 
@@ -1484,7 +1485,7 @@ VARIABLE POCKET ( --- a-addr )
 \G Comment till end of line.
   SOURCE >IN ! DROP ; IMMEDIATE
 
-M: >BODY ( xt --- a-addr)
+: >BODY ( xt --- a-addr)
 \G Convert execution token to parameter field address.
   4 + ;
 
