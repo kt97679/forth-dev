@@ -58,18 +58,6 @@ OPCODE UM+    ( n1 n2 --- n3 cy)
 OPCODE SPECIAL ( x ---)
 \G Any of a large number of special instructions, indicated by x.
 
-21
-OPCODE >R     ( x ---)
-\G Push x on the return stack.
-
-26
-OPCODE R@     ( --- x)
-\G x is a copy of the top of the return stack.
-
-27
-OPCODE R>     ( --- x)
-\G Pop the top of the return stack and place it on the stack.
-
 28
 OPCODE 0      ( --- 0)
 \G The constant number 0.
@@ -94,22 +82,9 @@ OPCODE LIT    ( --- lit)
 \ to DOVAR is compiled. DOVAR pushes the return address (the address
 \ where the data of the variable is stored) on the stack.
 
-: DOVAR  ( --- a-addr)
-\G Runtime part of variables.
-  R> ;
-
-\ PART 3: SIMPLE DEFINITIONS
-
-\ This is a large class of words, which would be written in machine code
-\ on most non-native code systems. Many contain just a few words, so they
-\ are implemented as macros.
-
-\ This category contains simple arithmetic and compare words, the runtime
-\ parts of DO LOOP  and string related words etc, many on which are
-\ dependent on each other, so they are in a less than logical order to
-\ avoid large numbers of forward references.
-
 : DROP 8 ! ;
+
+: SWAP 8 ! 12 ! 8 @ 12 @ ;
 
 : + UM+ DROP ;
 
@@ -135,9 +110,28 @@ M: RP!      ( a-addr ---)
 \G Set the return stack pointer to a-addr.
    4 ! ;
 
-: DUP SP@ @ ;
+M: R@ RP@ @ ;
 
-: SWAP 8 ! 12 ! 8 @ 12 @ ;
+: >R R@ SWAP RP@ ! RP@ -4 + RP! RP@ ! ;
+
+: R> R@ RP@ 4 + RP! R@ SWAP RP@ ! ;
+
+: DOVAR  ( --- a-addr)
+\G Runtime part of variables.
+  R> ;
+
+\ PART 3: SIMPLE DEFINITIONS
+
+\ This is a large class of words, which would be written in machine code
+\ on most non-native code systems. Many contain just a few words, so they
+\ are implemented as macros.
+
+\ This category contains simple arithmetic and compare words, the runtime
+\ parts of DO LOOP  and string related words etc, many on which are
+\ dependent on each other, so they are in a less than logical order to
+\ avoid large numbers of forward references.
+
+: DUP SP@ @ ;
 
 : ROT 8 ! 12 ! 16 ! 12 @ 8 @ 16 @ ;
 
@@ -1475,8 +1469,7 @@ VARIABLE POCKET ( --- a-addr )
 \G word such that it pushes its parameter field address onto the stack
 \G and then executes whatever comes after DOES>
   POSTPONE (;CODE)
-  27 INSERT-OPCODE \ Compile the R> primitive, which is the first
-                   \ instruction that the defined word performs.
+  POSTPONE R>
 ; IMMEDIATE
 
 \ PART 10: TOP LEVEL OF INTERPRETER

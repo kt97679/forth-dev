@@ -34,3 +34,7 @@ tester.fr real    0m5.860s user    0m5.852s sys     0m0.007s
 sp@, sp!, rp@, rp!, dup
 kernel.img 13680
 tester.fr real    0m8.696s user    0m8.674s sys     0m0.007s
+
+r@, r>, >r
+kernel.img 14160
+tester.fr real    0m15.463s user    0m15.443s sys     0m0.004s
