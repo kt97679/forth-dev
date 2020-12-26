@@ -1303,6 +1303,8 @@ VARIABLE 'LEAVE ( --- a-addr)
 \ branch instruction (bit 1 is set). Unconditional branch is made by
 \ opcode 28 (constant 0) and conditional branch.
 
+: 0BRANCH 0= R@ @ AND R> + 4 + >R ;
+
 : BEGIN ( --- x )
 \G Start a BEGIN UNTIL or BEGIN WHILE REPEAT loop.
   CODEFLUSH HERE ; IMMEDIATE
@@ -1311,7 +1313,7 @@ VARIABLE 'LEAVE ( --- a-addr)
 \G Form a loop with matching BEGIN.
 \G Runtime: A flag is take from the stack
 \G each time UNTIL is encountered and the loop iterates until it is nonzero.
-  CODEFLUSH 02 + , ; IMMEDIATE
+  CODEFLUSH POSTPONE 0BRANCH HERE - 4 - , ; IMMEDIATE
 
 : IF    ( --- x)
 \G Start an IF THEN or IF ELSE THEN construction.
@@ -1319,11 +1321,11 @@ VARIABLE 'LEAVE ( --- a-addr)
 \G the stack and if it is true the part between IF and ELSE is executed,
 \G otherwise the part between ELSE and THEN. If there is no ELSE, the part
 \G between IF and THEN is executed only if flag is true.
-  CODEFLUSH HERE 1 CELLS ALLOT ; IMMEDIATE
+  CODEFLUSH POSTPONE 0BRANCH HERE 1 CELLS ALLOT ; IMMEDIATE
 
 : THEN ( x ---)
 \G End an IF THEN or IF ELSE THEN construction.
-  CODEFLUSH HERE 02 + SWAP ! ; IMMEDIATE
+  CODEFLUSH HERE OVER - 4 - SWAP ! ; IMMEDIATE
 
 : ELSE ( x1 --- x2)
 \G part of IF ELSE THEN construction.

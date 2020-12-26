@@ -42,14 +42,10 @@ void virtual_machine(void)
   ip+=4;
   restart: /* Instruction restart after interrupt */
   if(!(ireg&1)) {
-    if(ireg&2) /*jumpz*/ {
-                t=CELL(sp);sp+=4;  
-                if(!t)ip=ireg&CELLMASK;
-          } else /*call*/ {
+            /* call */
             rp-=4;
             CELL(rp)=ip;
             ip=ireg&CELLMASK; 
-          } 
   } else {
    ret=ireg&0x80000000;
    ireg=(ireg&0x7fffffff)>>1;
