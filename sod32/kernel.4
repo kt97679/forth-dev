@@ -48,18 +48,6 @@ OPCODE UM+    ( n1 n2 --- n3 cy)
 OPCODE SPECIAL ( x ---)
 \G Any of a large number of special instructions, indicated by x.
 
-28
-OPCODE 0      ( --- 0)
-\G The constant number 0.
-
-29
-OPCODE 1      ( --- 1)
-\G The constant number 1.
-
-30
-OPCODE 4      ( --- 4)
-\G The constant number 4.
-
 31
 OPCODE LIT    ( --- lit)
 \G Push literal on the stack (literal number is in-line).
@@ -1339,7 +1327,7 @@ VARIABLE 'LEAVE ( --- a-addr)
 
 : ELSE ( x1 --- x2)
 \G part of IF ELSE THEN construction.
-  28 INSERT-OPCODE POSTPONE IF SWAP POSTPONE THEN ; IMMEDIATE
+  31 INSERT-OPCODE 0 , POSTPONE IF SWAP POSTPONE THEN ; IMMEDIATE
 
 : WHILE  ( x1 --- x2 x1 )
 \G part of BEGIN WHILE REPEAT construction.
@@ -1350,7 +1338,7 @@ VARIABLE 'LEAVE ( --- a-addr)
 
 : REPEAT ( x1 x2 --- )
 \G part of BEGIN WHILE REPEAT construction.
-  28 INSERT-OPCODE POSTPONE UNTIL POSTPONE THEN ; IMMEDIATE
+  31 INSERT-OPCODE 0 , POSTPONE UNTIL POSTPONE THEN ; IMMEDIATE
 
 VARIABLE POCKET ( --- a-addr )
 \G Buffer for S" strings that are interpreted.

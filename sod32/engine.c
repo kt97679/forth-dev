@@ -74,9 +74,6 @@ void virtual_machine(void)
                           goto doint;
                          }
                          break;
-     case 28:/*push0 */ sp-=4;CELL(sp)=0;break;
-     case 29:/*push1 */ sp-=4;CELL(sp)=1;break;
-     case 30:/*push4 */ sp-=4;CELL(sp)=4;break;                                                       
      case 31:/*lit*/ sp-=4;CELL(sp)=CELL(ip);ip+=4;break; 
     }
     ireg>>=5;

@@ -42,3 +42,7 @@ tester.fr real    0m15.463s user    0m15.443s sys     0m0.004s
 and, or, xor
 kernel.img 14336
 tester.fr real    0m21.198s user    0m21.195s sys     0m0.003s
+
+0, 1, 4
+kernel.img 15236
+tester.fr real    0m21.671s user    0m21.667s sys     0m0.001s
