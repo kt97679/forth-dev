@@ -29,6 +29,8 @@ TIMER-EX \ address of timer interrupt routine.
 OPCODE NOOP  ( --- )
 \G Do nothing
 
+1 OPCODE NAND
+
 5
 OPCODE !     ( x a-addr --- )
 \G Store cell x at a-addr
@@ -36,18 +38,6 @@ OPCODE !     ( x a-addr --- )
 7
 OPCODE @       ( a-addr --- x)
 \G Fetch cell x at a-addr.
-
-9
-OPCODE AND     ( x1 x2 --- x3)
-\G Bitwise and of the top two cells on the stack.
-
-10
-OPCODE OR      ( x1 x2 --- x3)
-\G Bitwise or of the top two cells on the stack.
-
-11
-OPCODE XOR     ( x1 x2 --- x3)
-\G Bitwise exclusive or of the top two cells on the stack.
 
 18
 OPCODE UM+    ( n1 n2 --- n3 cy)
@@ -137,9 +127,15 @@ M: R@ RP@ @ ;
 
 : INVERT ( x1 --- x2)
 \G Invert all the bits of x1 (one's complement)
-   -1 XOR ;
+   DUP NAND ;
+
+: AND NAND INVERT ;
+
+: OR INVERT SWAP INVERT NAND ;
 
 : OVER 0 @ 8 + @ ;
+
+: XOR OVER INVERT OVER NAND ROT ROT INVERT NAND NAND ;
 
 : NEGATE INVERT 1 + ;
 

@@ -38,3 +38,7 @@ tester.fr real    0m8.696s user    0m8.674s sys     0m0.007s
 r@, r>, >r
 kernel.img 14160
 tester.fr real    0m15.463s user    0m15.443s sys     0m0.004s
+
+and, or, xor
+kernel.img 14336
+tester.fr real    0m21.198s user    0m21.195s sys     0m0.003s

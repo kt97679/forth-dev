@@ -56,11 +56,9 @@ void virtual_machine(void)
    do {
     switch(ireg&31) { 
      case 0: /*nop*/ break;
+     case 1: /* nand */ sp += 4; CELL(sp) = ~(CELL(sp) & CELL(sp - 4)); break;
      case 5: /* !    */ sp += 8; CELL(CELL(sp - 8)) = CELL((sp - 4) & CELLMASK); break;
      case 7: /* @ */   CELL(sp)=CELL(CELL(sp)&CELLMASK);break;
-     case 9: /* and */ CELL(sp+4)=CELL(sp)&CELL(sp+4);sp+=4;break;
-     case 10:/* or  */ CELL(sp+4)=CELL(sp)|CELL(sp+4);sp+=4;break;
-     case 11:/* xor */ CELL(sp+4)=CELL(sp)^CELL(sp+4);sp+=4;break;
      case 18:/* um+  */ t = CELL(sp) + CELL(sp + 4); CELL(sp) = (t < CELL(sp)); CELL(sp + 4) = t; break;
      case 19:/*special*/ t=CELL(sp);sp+=4;
                          if(t==49) { /* iret instruction */
