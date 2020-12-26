@@ -22,3 +22,7 @@ tester.fr real    0m0.795s user    0m0.795s sys     0m0.000s
 
 kernel.img 12340
 tester.fr real    0m2.800s user    0m2.791s sys     0m0.008s
+
+drop
+kernel.img 12784
+tester.fr real    0m5.022s user    0m4.982s sys     0m0.008s

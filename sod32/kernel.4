@@ -10,6 +10,7 @@
 
 \ All of the file after the next line is cross compiled.
 CROSS-COMPILE
+32 ALLOT-T
 
 \ PART 0: BOOT VECTORS.
 \ The computer starts execution at address 0.
@@ -64,10 +65,6 @@ OPCODE UM+    ( n1 n2 --- n3 cy)
 19
 OPCODE SPECIAL ( x ---)
 \G Any of a large number of special instructions, indicated by x.
-
-20
-OPCODE DROP   ( x ---)
-\G Discard the top item on the stack.
 
 21
 OPCODE >R     ( x ---)
@@ -127,6 +124,8 @@ OPCODE LIT    ( --- lit)
 \ parts of DO LOOP  and string related words etc, many on which are
 \ dependent on each other, so they are in a less than logical order to
 \ avoid large numbers of forward references.
+
+: DROP 8 ! ;
 
 : INVERT ( x1 --- x2)
 \G Invert all the bits of x1 (one's complement)
@@ -293,10 +292,9 @@ M: I ( --- n )
   R> @ R> DROP R> DROP >R ; \ Remove loop parameters and replace top of ret
                             \ stack by leave address.
 
-M: UNLOOP ( --- )
+: UNLOOP ( --- )
 \G Remove one set of loop parameters from the return stack.
-   R> DROP R> DROP ;
-
+   R> R> R> DROP DROP >R ;
 
 : (LOOP) ( ---)
 \G Runtime part of LOOP
@@ -423,7 +421,7 @@ M: CHARS ( n1 --- n2)
 \G Store the double number d at a-addr.
    !A 4 + !A DROP ;
 
-M: 2DROP ( d --- )
+: 2DROP ( d --- )
 \G Discard the top double number on the stack.
    DROP DROP ;
 

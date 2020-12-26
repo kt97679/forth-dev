@@ -29,15 +29,15 @@
 \G Make a definition similar to : that will be expanded as a macro.
   : LAST @ DUP C@ 32 OR SWAP C! ;
 
-M: <= ( n1 n2 --- f)
+: <= ( n1 n2 --- f)
 \G f is true if and only if n1 is less than or equal to n2.
   > 0= ;
 
-M: 0<= ( n1 --- f)
+: 0<= ( n1 --- f)
 \G f is true if and only if n1 is less than zero.
   0 <= ;
 
-M: BOUNDS ( addr1 n --- addr2 addr1)
+: BOUNDS ( addr1 n --- addr2 addr1)
 \G Convert address and length to two bounds addresses for DO LOOP 
   OVER + SWAP ;
 
@@ -53,10 +53,6 @@ M: BOUNDS ( addr1 n --- addr2 addr1)
    1-
   REPEAT
 ;
-
-M: NIP ( x1 x2 --- x2)
-\G Discard the second item on the stack.
-  SWAP DROP ;
 
 \ PART 2: SEARCH ORDER WORDLIST
 

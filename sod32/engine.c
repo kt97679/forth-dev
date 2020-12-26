@@ -6,6 +6,9 @@
 
 #include "sod32.h"
 
+#define sp CELL(0)
+#define rp CELL(4)
+
 /* Perform byte swap of 32-bit words in region of memory of virtual machine*/
 void swap_mem(UNS32 start,UNS32 len) {
 #ifndef BIG_ENDIAN
@@ -21,11 +24,11 @@ void swap_mem(UNS32 start,UNS32 len) {
 
 void virtual_machine(void)
 {
- register UNS32 sp,rp,ret,ip,ireg,t;
+ register UNS32 ret,ip,ireg,t;
  interrupt=0;
  rp=MEMSIZE;
  sp=MEMSIZE-1024;
- ip=0;
+ ip=32;
  for(;;) {
   if(interrupt) {
    ireg=1; 
@@ -77,9 +80,7 @@ void virtual_machine(void)
                           goto doint;
                          }
                          break;
-     case 20:/* drop */ sp+=4;break;
      case 21:/* >r   */ rp-=4;CELL(rp)=CELL(sp);sp+=4;break;
-                        CELL(sp)=t;break;
      case 24:/* dup  */ sp-=4;CELL(sp)=CELL(sp+4);break;
      case 25:/* over */ sp-=4;CELL(sp)=CELL(sp+8);break;
      case 26:/* r@   */ sp-=4;CELL(sp)=CELL(rp);break;
