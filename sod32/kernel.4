@@ -393,7 +393,7 @@ M: CHARS ( n1 --- n2)
 
 : +! ( w a-addr ---)
 \G Add w to the contents of the cell at a-addr.
-   DUP @ ROT + SWAP !A DROP ;
+   DUP @ ROT + SWAP ! ;
 
 \ Double numbers occupy two cells in memory and on the stack.
 \ The most significant half on the number is in the first memory
@@ -405,7 +405,7 @@ M: CHARS ( n1 --- n2)
 
 : 2! ( d a-addr --- )
 \G Store the double number d at a-addr.
-   !A 4 + !A DROP ;
+   !A 4 + ! ;
 
 : 2DROP ( d --- )
 \G Discard the top double number on the stack.
