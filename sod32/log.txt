@@ -30,3 +30,7 @@ tester.fr real    0m5.022s user    0m4.982s sys     0m0.008s
 swap, rot, over
 kernel.img 13436
 tester.fr real    0m5.860s user    0m5.852s sys     0m0.007s
+
+sp@, sp!, rp@, rp!, dup
+kernel.img 13680
+tester.fr real    0m8.696s user    0m8.674s sys     0m0.007s

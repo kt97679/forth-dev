@@ -62,10 +62,6 @@ OPCODE SPECIAL ( x ---)
 OPCODE >R     ( x ---)
 \G Push x on the return stack.
 
-24
-OPCODE DUP    ( x --- x x )
-\G Duplicate the top cell on the stack.
-
 26
 OPCODE R@     ( --- x)
 \G x is a copy of the top of the return stack.
@@ -115,6 +111,32 @@ OPCODE LIT    ( --- lit)
 
 : DROP 8 ! ;
 
+: + UM+ DROP ;
+
+VARIABLE S0 ( --- a-addr)
+\G Variable that holds the bottom address of the stack.
+
+VARIABLE R0 ( --- a-addr)
+\G Variable that holds the bottom address of the return stack.
+
+: SP@      ( --- a-addr)
+\G Return the address of the stack pointer (before SP@ was executed).
+   0 @ 4 + ;
+
+: SP!      ( a-addr ---)
+\G Set the stack pointer to a-addr.
+   0 ! ;
+
+M: RP@      ( --- a-addr)
+\G Return the address of the return stack pointer.
+   4 @ ;
+
+M: RP!      ( a-addr ---)
+\G Set the return stack pointer to a-addr.
+   4 ! ;
+
+: DUP SP@ @ ;
+
 : SWAP 8 ! 12 ! 8 @ 12 @ ;
 
 : ROT 8 ! 12 ! 16 ! 12 @ 8 @ 16 @ ;
@@ -122,8 +144,6 @@ OPCODE LIT    ( --- lit)
 : INVERT ( x1 --- x2)
 \G Invert all the bits of x1 (one's complement)
    -1 XOR ;
-
-: + UM+ DROP ;
 
 : OVER 0 @ 8 + @ ;
 
@@ -190,28 +210,6 @@ M: BYE  ( ---)
    13 EMIT 10 EMIT ;
 
 
-
-VARIABLE S0 ( --- a-addr)
-\G Variable that holds the bottom address of the stack.
-
-VARIABLE R0 ( --- a-addr)
-\G Variable that holds the bottom address of the return stack.
-
-M: SP@      ( --- a-addr)
-\G Return the address of the stack pointer (before SP@ was executed).
-   0 SPECIAL ;
-
-M: SP!      ( a-addr ---)
-\G Set the stack pointer to a-addr.
-   1 SPECIAL ;
-
-M: RP@      ( --- a-addr)
-\G Return the address of the return stack pointer.
-  02 SPECIAL ;
-
-M: RP!      ( a-addr ---)
-\G Set the return stack pointer to a-addr.
-  03 SPECIAL ;
 
 : ?DUP ( n --- 0 | n n)
 \G Duplicate the top cell on the stack, but only if it is nonzero.

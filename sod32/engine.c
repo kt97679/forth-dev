@@ -77,7 +77,6 @@ void virtual_machine(void)
                          }
                          break;
      case 21:/* >r   */ rp-=4;CELL(rp)=CELL(sp);sp+=4;break;
-     case 24:/* dup  */ sp-=4;CELL(sp)=CELL(sp+4);break;
      case 26:/* r@   */ sp-=4;CELL(sp)=CELL(rp);break;
      case 27:/* r>   */ sp-=4;CELL(sp)=CELL(rp);rp+=4;break;
      case 28:/*push0 */ sp-=4;CELL(sp)=0;break;

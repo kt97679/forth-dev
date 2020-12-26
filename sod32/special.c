@@ -117,10 +117,6 @@ void do_os(void)
 void do_special(UNS32 code) /* execute a special instruction */
 {
  switch(code) {
-  case 0: /* sp@ */ save_sp-=4;CELL(save_sp)=save_sp+4;break;
-  case 1: /* sp! */ save_sp=CELL(save_sp)&CELLMASK;break;
-  case 2: /* rp@ */ save_sp-=4;CELL(save_sp)=save_rp;break;
-  case 3: /* rp! */ save_rp=CELL(save_sp)&CELLMASK;save_sp+=4;break;
   case 32: /* trap0 */ do_os();break; 
   case 50: /* setalarm */ setalarm(CELL(save_sp));save_sp+=4;break;
  }
