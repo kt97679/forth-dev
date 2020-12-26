@@ -1,25 +1,28 @@
-original sod 32
+Build new kernel.img from source:
 
+echo 'S" extend-cross.4" INCLUDED '|./sod32 kernel.img
+
+Run tests:
+
+time ./sod32 kernel.img <<< $(echo -e 'S" tester.fr" INCLUDED\n12345\nBYE')
+
+original sod 32
 kernel.img 10164
 tester.fr real    0m0.059s user    0m0.054s sys     0m0.004s
 
 lshift, rshift
-
 kernel.img 10312
 tester.fr real    0m0.071s user    0m0.070s sys     0m0.001s
 
 +, um*, um/mod
-
 kernel.img 11552
 tester.fr real    0m0.123s user    0m0.113s sys     0m0.009s
 
 c@, c!a
-
 kernel.img 11952
 tester.fr real    0m0.795s user    0m0.795s sys     0m0.000s
 
 0=, negate <, u<
-
 kernel.img 12340
 tester.fr real    0m2.800s user    0m2.791s sys     0m0.008s
 
