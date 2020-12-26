@@ -26,3 +26,7 @@ tester.fr real    0m2.800s user    0m2.791s sys     0m0.008s
 drop
 kernel.img 12784
 tester.fr real    0m5.022s user    0m4.982s sys     0m0.008s
+
+swap, rot, over
+kernel.img 13436
+tester.fr real    0m5.860s user    0m5.852s sys     0m0.007s
